@@ -1,0 +1,88 @@
+const mongoose = require('mongoose');
+const { Schema } = mongoose;
+
+const policeInfoSchema = new Schema({
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    profilePhoto: { type: String }
+}, { timestamps: true });
+
+const locationSchema = new Schema({
+    name: { type: String },
+    address: {
+        street: String,
+        city: String,
+        state: String,
+        pinCode: String,
+        Country: { type: String, default: "INDIA" }
+    }
+}, { timestamps: true });
+
+const criminalSchema = new Schema({
+    name: {
+        first: { type: String, required: true },
+        middle: String,
+        last: { type: String, required: true }
+    },
+    criminalId: { type: String, required: true, unique: true },
+    gender: { type: String, enum: ['male', 'female', 'other'] },
+    dateOfBirth: Date,
+    photo: { type: String },
+    status: { type: String, enum: ['wanted', 'arrested', 'released', 'deceased'], default: 'wanted' },
+    createdBy: { type: Schema.Types.ObjectId, ref: 'PoliceInfo' }
+}, { timestamps: true });
+
+const crimeSchema = new Schema({
+    caseNumber: { type: String, required: true, unique: true },
+    crimeType: { type: String, required: true, enum: ['theft', 'assault', 'homicide', 'robbery', 'fraud', 'other'] },
+    location: { type: Schema.Types.ObjectId, ref: 'Location', required: true },
+    dateOfCrime: { type: Date, required: true },
+    timeOfCrime: String,
+    remarks: String,
+    status: { type: String, enum: ['open', 'under investigation', 'closed', 'cold case'], default: 'open' },
+    victims: [{
+        name: String,
+        contact: String,
+        statement: String,
+        address: { type: Schema.Types.ObjectId, ref: 'Location' }
+    }]
+}, { timestamps: true });
+
+const evidenceSchema = new Schema({
+    crime: { type: Schema.Types.ObjectId, ref: 'Crime', required: true },
+    evidenceId: { type: String, required: true, unique: true },
+    type: { type: String, enum: ['weapon', 'dna', 'fingerprint', 'document', 'digital', 'photo', 'other'], required: true },
+    description: { type: String, required: true },
+    location: { type: Schema.Types.ObjectId, ref: 'Location' },
+    photos: [String]
+}, { timestamps: true });
+
+const witnessSchema = new Schema({
+    crime: { type: Schema.Types.ObjectId, ref: 'Crime', required: true },
+    name: {
+        first: { type: String, required: true },
+        middle: String,
+        last: { type: String, required: true }
+    },
+    contactInfo: {
+        phone: String,
+        email: String,
+        address: { type: Schema.Types.ObjectId, ref: 'Location' }
+    },
+    statement: { type: String, required: true },
+    relationship: { type: String, enum: ['victim', 'bystander', 'relative', 'friend', 'other'] },
+    interviewDate: Date,
+    interviewedBy: { type: Schema.Types.ObjectId, ref: 'PoliceInfo' },
+    followUpRequired: { type: Boolean, default: false },
+    notes: String
+}, { timestamps: true });
+
+const PoliceInfo = mongoose.model('PoliceInfo', policeInfoSchema);
+const Location = mongoose.model('Location', locationSchema);
+const Criminal = mongoose.model('Criminal', criminalSchema);
+const Crime = mongoose.model('Crime', crimeSchema);
+const Evidence = mongoose.model('Evidence', evidenceSchema);
+const Witness = mongoose.model('Witness', witnessSchema);
+
+module.exports = { PoliceInfo, Location, Criminal, Crime, Evidence, Witness };
